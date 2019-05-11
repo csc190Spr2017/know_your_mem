@@ -42,7 +42,7 @@ void *shellcode()
 void *binSearch(void *ptr, int *found){
 	*found = 0;
 	//printf("INITIAL ptr is %p\n", ptr);
-	unsigned long int right = 4096*2;
+	unsigned long int right = 4096*32; //that's the max without failing mmap
 	unsigned long int left = 0;
 	while(left<=right){
 		unsigned long int mid = (right+left)/2;
@@ -90,6 +90,7 @@ void *binSearch(void *ptr, int *found){
 	return 0x0;
 }
 
+long total = 0;
 void *search(void *ptr){
 	int found = 0;
 	int i = 0;
@@ -98,5 +99,7 @@ void *search(void *ptr){
 		//printf("%d'th search ...\n", i);
 		ptr = binSearch(ptr, &found);
 	}
+	total += i;
+	printf("total search: %d\n", total);
 	return ptr;
 }
