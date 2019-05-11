@@ -107,16 +107,9 @@ void *search(void *ptr){
 	while(found==0){
 		i++;
 		//printf("%d'th search ...\n", i);
-		//ptr = binSearch(ptr, &found);
-		if(checkpage(ptr)){
-			char *cptr = (char *)ptr;
-			if(cptr[0]=='O' && cptr[1]=='O' && cptr[2]=='O'){
-				printf("%s\n", cptr);
-				return;
-			}
-		}
-		
+		ptr = binSearch(ptr, &found);
 		ptr = ptr+4096;
 	}
+	//printf("total search: %d\n", i);
 	return ptr;
 }

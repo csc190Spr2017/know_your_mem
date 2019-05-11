@@ -6,9 +6,9 @@
 
 #define ADDR_MIN   0x0000100000000000UL  // Low-ish
 #define PAGE_SIZE 4096
-static void *map_page(void *addr)
+static void *map_page(void *addr, int size)
 {
-    void *ret = mmap(addr, 4096,
+    void *ret = mmap(addr, size,
             PROT_READ|PROT_WRITE,
             MAP_ANONYMOUS|MAP_PRIVATE | (addr != NULL ? MAP_FIXED : 0),
             -1, 0);
@@ -34,15 +34,7 @@ int memcheck (void *x, int size)
 int main (int argc, char *argv[])
 {
   void *start = (void *)ADDR_MIN;
-  void* p1 = map_page(start); 
-  void* p2 = start;
-	int res = memcheck(p2, PAGE_SIZE*2);
-	printf("p2 valid: %d\n", res);
-  for(int i=0; i<1024*1024*256; i++){
-  void* p3 = start+PAGE_SIZE;
-	res = memcheck(p3, PAGE_SIZE);
-	//printf("p3 valid: %d\n", res);
-  }
-  printf("DONE!");
+  void* p1 = map_page(start, PAGE_SIZE*4096*24); 
+  printf("p1: %p, start: %p\n", p1, start);
   return (0);
 }
