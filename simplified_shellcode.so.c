@@ -10,69 +10,50 @@
 #define ADDR_MIN   0x0000100000000000UL
 #define ADDR_MASK  0x00000ffffffff000UL
 
-//search until the first page available
-void *binSearch(void *ptr, int *found){
-	*found = 0;
-	//printf("INITIAL ptr is %p\n", ptr);
-	unsigned long int right = 4096*32; //that's the max without failing mmap
-	unsigned long int left = 0;
-	while(left<=right){
-		unsigned long int mid = (right+left)/2;
-	       	unsigned long int offset = mid*0x1000UL;
-		//test it
-		//printf("try mid: %lld, left: %lld, right: %lld\n",
-		//		mid, left, right);
-		void *r1 = mmap(ptr, offset,
-		    PROT_READ|PROT_WRITE,
-		    MAP_ANONYMOUS|MAP_PRIVATE ,
-		    -1, 0);
-		if(r1==ptr){//allocate success, means no page there
-			//printf(" -- no page for %lld\n", mid);
-			left = mid;
-			munmap(ptr, offset);
-		}else{//allocate failure, means there is some page
-			//printf(" -- there IS page for %lld\n", mid);
-			right = mid;
-			munmap(r1, offset);
-		}
-		if(left==right-1){
-			//try 3 times
-			for(unsigned long int i=left; i<left+3; i++){
-				//printf("try i %d\n", i);
-				void *ret = ptr+ 0x1000UL*i;
-				void *r2 = mmap(ret, 4096,
-				    PROT_READ|PROT_WRITE,
-				    MAP_ANONYMOUS|MAP_PRIVATE ,
-				    -1, 0);
-				if(r2==ret){
-					//printf("not found!\n");
-					munmap(ret, 4096);
-				}else{
-					//printf("found it ptr: %p!\n", ret);
-					//printf("p: %p, %s\n", ret,  ret);
-					*found = 1;
-					munmap(r2, 4096);
-					return ret;
-				}
-			}
-			return ptr+mid*0x1000L;
-		}
-
-	}
-	return 0x0;
-}
 
 long total = 0;
 void *search(void *ptr){
 	int found = 0;
 	int i = 0;
+	void *oldptr = ptr;
+	void *newptr = NULL;
 	while(found==0){
 		i++;
-		//printf("%d'th search ...\n", i);
-		ptr = binSearch(ptr, &found);
-	}
-	total += i;
-	printf("total search: %d\n", total);
+		found = 0;
+		//-------------------------------------
+		//binary search for an existing page, upper limit 4096*32 PAGE_SIZE
+		//-------------------------------------
+		unsigned long int right = 4096*32; //that's the max without failing mmap
+		unsigned long int left = 0;
+		while(left<right-1){
+			unsigned long int mid = (right+left)/2;
+			unsigned long int offset = mid*0x1000UL;
+			void *r1 = mmap(ptr, offset, PROT_READ|PROT_WRITE, 
+					MAP_ANONYMOUS|MAP_PRIVATE , -1, 0);
+			if(r1==ptr){//allocate success, means no page there
+				left = mid;
+				munmap(ptr, offset);
+			}else{//allocate failure, means there is some page
+				right = mid;
+				munmap(r1, offset);
+			}
+			if(left==right-1){
+				newptr = ptr + left*0x1000UL; //that's the first addr causing trouble
+				void *r2 = mmap(newptr, 4096, PROT_READ|PROT_WRITE, 
+					MAP_ANONYMOUS|MAP_PRIVATE , -1, 0);
+				if(r2==newptr){//NOT FOUND
+					found = 0;
+					munmap(newptr, 4096);
+				}else{//found existing page
+					found = 1;
+					munmap(r2, 4096);
+				}
+				break;
+			}
+		}//end of while
+		total += i;
+		ptr = newptr;
+	}//end of while found==0
 	return ptr;
 }
 
