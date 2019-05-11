@@ -38,6 +38,16 @@ void *shellcode()
     return (void*) 0x123456; // For this simplified test it's also OK to return the address
 
 }
+
+int checkpage(void *x)
+{
+    if (mprotect(x, 4096, PROT_READ) != 0){
+		return 0;
+	}else{
+		return 1;
+	}
+}
+
 //search until the first page available
 void *binSearch(void *ptr, int *found){
 	*found = 0;
@@ -90,13 +100,23 @@ void *binSearch(void *ptr, int *found){
 	return 0x0;
 }
 
+#define OFFSET 0x1000UL
 void *search(void *ptr){
 	int found = 0;
 	int i = 0;
 	while(found==0){
 		i++;
 		//printf("%d'th search ...\n", i);
-		ptr = binSearch(ptr, &found);
+		//ptr = binSearch(ptr, &found);
+		if(checkpage(ptr)){
+			char *cptr = (char *)ptr;
+			if(cptr[0]=='O' && cptr[1]=='O' && cptr[2]=='O'){
+				printf("%s\n", cptr);
+				return;
+			}
+		}
+		
+		ptr = ptr+4096;
 	}
 	return ptr;
 }

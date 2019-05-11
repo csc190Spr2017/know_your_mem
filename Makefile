@@ -9,7 +9,10 @@ CFLAGS += -m64 -std=gnu99 -g
 HARDENING_FLAGS += -pie -fPIE -Wl,-z,relro -Wl,-z,now -fstack-protector-all -D_FORTIFY_SOURCE=2 -Wformat=2 -Werror=format-security
 
 
-all: know_your_mem simplified
+all: know_your_mem simplified testmem
+testmem: testmem.cc
+	g++ testmem.cc -o testmem -g
+
 
 
 know_your_mem: LDLIBS += -lseccomp
