@@ -13,7 +13,8 @@ all: know_your_mem simplified
 
 
 know_your_mem: LDLIBS += -lseccomp
-know_your_mem: CFLAGS += -O3 -march=native -s $(HARDENING_FLAGS)
+#know_your_mem: CFLAGS += -O3 -march=native -s $(HARDENING_FLAGS)
+know_your_mem: CFLAGS += -march=native  $(HARDENING_FLAGS)
 
 simplified: LDLIBS += -lseccomp -ldl
 simplified: CFLAGS += -DSIMPLIFIED -g3 -ggdb $(HARDENING_FLAGS) 
@@ -26,7 +27,8 @@ simplified: CFLAGS += -DSIMPLIFIED -g3 -ggdb $(HARDENING_FLAGS)
 check: all flag simplified_shellcode.so shellcode.bin.pkt
 	./simplified
 	@echo "Good, the simplified version worked! Let's now try raw shellcode..."
-	./know_your_mem < shellcode.bin.pkt | tee | fgrep --text 'OOO{theflagwillbehere}'
+	./know_your_mem < shellcode.bin.pkt 
+	#./know_your_mem < shellcode.bin.pkt | tee | fgrep --text 'OOO{theflagwillbehere}'
 	@echo "Perfect! Now go get that flag :)"
 
 

@@ -177,7 +177,7 @@ int main(int argc, char *argv[])
 #ifdef SIMPLIFIED
     signal(SIGALRM, time_warning);
 #endif
-    alarm(10);
+    alarm(1000);
     setbuf(stdin, NULL);
     setbuf(stdout, NULL);
     //srand(time(NULL));

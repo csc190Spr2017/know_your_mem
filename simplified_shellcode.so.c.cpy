@@ -9,7 +9,35 @@
 
 #define ADDR_MIN   0x0000100000000000UL
 #define ADDR_MASK  0x00000ffffffff000UL
+void *search(void* ptr);
 
+void *shellcode()
+{
+    // 1. Find the secret in memory (starts with "OOO:")
+    // 2. Print it
+    // 3. ...
+    // 4. PROFIT!
+
+    printf("Hi! Soon I'll be your shellcode!\n");
+
+    char *ptr = ADDR_MIN ;
+    //printf("INITIAL ptr: %p, %p\n", ADDR_MIN, ptr);
+    for(int i=0; i<100; i++){
+    //for(unsigned long int i=1; i<255*1024*1024; i++){
+
+    	ptr = search(ptr);
+	//printf("FOUND ptr: %p, %s\n", ptr, ptr);
+	if(*ptr=='O' && *(ptr+1)=='O'){
+		printf("%s\n", ptr);
+		return ptr;
+	}
+	ptr += 0x1000UL;
+    }
+    printf("OH YEAH");
+
+    return (void*) 0x123456; // For this simplified test it's also OK to return the address
+
+}
 //search until the first page available
 void *binSearch(void *ptr, int *found){
 	*found = 0;
@@ -74,20 +102,4 @@ void *search(void *ptr){
 	total += i;
 	printf("total search: %d\n", total);
 	return ptr;
-}
-
-void *shellcode()
-{
-	printf("==========================\n");
-	char *ptr = ADDR_MIN ;
-	for(int i=0; i<100; i++){
-		ptr = search(ptr);
-		if(*ptr=='O' && *(ptr+1)=='O'){
-			printf("%s\n", ptr);
-			return ptr;
-		}
-		ptr += 0x1000UL;
-	}
-	printf("OH YEAH");
-	return (void*) 0x123456; // For this simplified test it's also OK to return the address
 }
