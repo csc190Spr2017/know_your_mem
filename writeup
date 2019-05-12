@@ -1,0 +1,36 @@
+(1) use binary search to test if page exists and accomplishes 
+	within time limits usually between 2-8 seconds in simple....so.c
+(2) mislead by the extra 0xb syscall at the beginning and
+   merged binsearch alg, but this is not necessary -> shellcode.c
+(3) use objdump -d shellcode.elf to dump the instructions
+and find out the first 4 instructions to delete (0xb syscall) - after
+that it's the desired function entry !!! this step has to be manual
+    then dump the shellcode.elf into text and manually insert
+a sequence of 0x90 bytes to replace the 4 instructions to delete
+and then xxd -r the file to get back
+(4) modify Makefile to generate .bin and the .pkt file
+---> the above approach is NOT working, the reason is that
+---> the first 4 instructions are actually NEEDED by the progrma
+---> it is the part of the program!!!! But the ENTRY of the program
+----> can NOT be the beginning of the shell code!
+(5) know_your_mem.cc when loading the shellcode: it's just returning
+	the entry address (after payload length). Unlike the simpler version
+	which locates the entry of the function. So need to do something
+	to the build chain
+(6) try play/remove some gcc options: -Os 
+	removing the above generates much longer code, but does not solve
+	the problem of program entry:
+		commands to verify:
+			readelf -h shellcode.elf # lists program entry
+			objdump -d shellcode.elf # lists all disassembly
+(7) Final idea:
+	use gcc -S to generate assembly file of shellcode.c first and
+manually adjust the sequence of functions (looks stupid but it 
+will work).
+	Adjust Makefile (check command) correspondingly.
+	It works ---
+--------------
+	make check
+---------------
+(8) submission:
+	cat shellcode.bin.pkt | nc ..... the url 

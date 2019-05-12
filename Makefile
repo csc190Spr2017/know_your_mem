@@ -25,10 +25,18 @@ simplified: CFLAGS += -DSIMPLIFIED -g3 -ggdb $(HARDENING_FLAGS)
 
 
 check: all flag simplified_shellcode.so shellcode.bin.pkt
-	./simplified
+	#./simplified
 	@echo "Good, the simplified version worked! Let's now try raw shellcode..."
-	./know_your_mem < shellcode.bin.pkt 
-	#./know_your_mem < shellcode.bin.pkt | tee | fgrep --text 'OOO{theflagwillbehere}'
+	# ---------- special treatment for shellcode.c so that inserts an instruction to jump to _start
+	# gcc -nostdlib -static -fPIC -Wall -DNDEBUG -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -Os -S shellcode.c
+	# !!!! MANUALLY MOVE .start up in assembly file!
+	gcc -c -nostdlib -static -fPIC -Wall -DNDEBUG -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -s -o shellcode.elf shellcode.s 
+	objcopy shellcode.elf --dump-section .text=shellcode.bin
+	./topkt.py shellcode.bin 
+	# ----------------------------------
+ 
+	#./know_your_mem < shellcode.bin.pkt 
+	./know_your_mem < shellcode.bin.pkt | tee | fgrep --text 'OOO{theflagwillbehere}'
 	@echo "Perfect! Now go get that flag :)"
 
 
@@ -39,7 +47,8 @@ mycheck: all flag solution.so solution.bin.pkt
 
 
 %.bin: %.c
-	gcc -nostdlib -static -fPIC -Os -Wall -DNDEBUG -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -s -o $*.elf $<
+	#gcc -nostdlib -static -fPIC -Wall -DNDEBUG -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -s -o $*.elf $<
+	gcc -nostdlib -static -fPIC -Wall -DNDEBUG -fno-exceptions -fno-asynchronous-unwind-tables -fno-unwind-tables -s -o $*.elf $<
 	!(readelf -W --sections $*.elf | egrep '\.(ro)?data') || echo -e "\n\nWARNING: you have .(ro)data, you'll have to adjust this build.\n\n" >/dev/stderr
 	objcopy $*.elf --dump-section .text=$@
 
